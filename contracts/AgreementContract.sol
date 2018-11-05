@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 
 // Copyright 2017 Bittrex
 
@@ -19,7 +19,7 @@ contract AgreementContract {
     event AgreementDeclined(address by, string reason);
 
     modifier onlyTenantOrLandlord() { 
-        require(msg.sende r== tenant || msg.sender == landlord); 
+        require(msg.sender == tenant || msg.sender == landlord); 
         _; 
     }
 

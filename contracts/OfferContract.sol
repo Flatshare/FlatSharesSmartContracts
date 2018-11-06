@@ -33,7 +33,7 @@ contract OfferContract {
         emit OwnershipTransfered(msg.sender, _newOwner);
     }
 
-    function acceptOffer(string _agreementDetails) onlyTenantOrLandlord public {
+    function acceptOffer(string _agreementDetails) onlyOwner public {
         AgreementContract agreement = new AgreementContract(msg.sender, _by, _agreementDetails);
         emit AgreementCreated(_by, msg.sender);
     }

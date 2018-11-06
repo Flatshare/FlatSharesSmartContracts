@@ -1,6 +1,5 @@
 pragma solidity ^0.4.24;
 
-// Copyright 2017 Bittrex
 
 contract AgreementContract {
 
@@ -14,7 +13,6 @@ contract AgreementContract {
     bool signedByTenant;
     bool signedByLandlord;
 
-    event AgreementCreated(address tenant, address landlord);
     event AgreementSigned(address by);
     event AgreementDeclined(address by, string reason);
 
@@ -33,7 +31,6 @@ contract AgreementContract {
         landlord = _landlord;
         agreementDetails = _agreementDetails;
         status = AgreementStatus.New;
-        emit AgreementCreated(_tenant, _landlord);
     }
 
     function signAgreement() onlyTenantOrLandlord public returns(bool){

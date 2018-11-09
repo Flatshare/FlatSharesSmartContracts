@@ -25,7 +25,7 @@ contract OfferContract {
         rentPrice = _rentPrice;
         area = _area;
 
-        emit OfferCreated(_by, _rentPrice, _area);
+        emit OfferCreated(msg.sender, _rentPrice, _area);
     }
 
     function transferOwnership(address _newOwner) onlyOwner public {
@@ -33,9 +33,9 @@ contract OfferContract {
         emit OwnershipTransfered(msg.sender, _newOwner);
     }
 
-    function acceptOffer(string _agreementDetails) onlyOwner public {
-        AgreementContract agreement = new AgreementContract(msg.sender, _by, _agreementDetails);
-        emit AgreementCreated(_by, msg.sender);
+    function acceptOffer(string _agreementDetails) public {
+        AgreementContract agreement = new AgreementContract(msg.sender, owner, _agreementDetails);
+        emit AgreementCreated(msg.sender, owner);
     }
 
     function changeRequest(uint _newRentPrice) public {

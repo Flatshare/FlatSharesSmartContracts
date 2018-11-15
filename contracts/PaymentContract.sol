@@ -82,9 +82,27 @@ contract PaymentContract {
         _; 
     }
 
-    modifier onlyInAgreementPeriod() { 
-        require(block.timestamp >= agreement.agreementCreated().add(agreement.period().add(month))); 
+    modifier onlyLandlord() { 
+        require(msg.sender == landlord); 
         _; 
+    }
+
+    modifier onlyTenantOrLandlord() { 
+        require(msg.sender == tenant || msg.sender == landlord); 
+        _; 
+    }
+
+    modifier onlyInAgreementPeriod() { 
+        require(block.timestamp >= agreement.agreementCreated().add(agreement.period())); 
+        _; 
+    }
+
+    modifier onlyAfterPeriodExpired() { 
+        require (agreement.agreementCreated().add(agreement.period()) < block.timestamp); 
+        _; 
+    }
+
+    function() payable external {
     }
     
     constructor(address _tenant, address _landlord, address _agreement) {
@@ -117,6 +135,15 @@ contract PaymentContract {
 
     function getMyFine() external view onlyTenant returns(uint) {
         return calculateFine(block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days)));
+    }
+
+    function returnSecurityDeposit() external onlyLandlord onlyAfterPeriodExpired {
+      tenant.transfer(agreement.securityDeposit());
+    }
+
+    function startArbitration(string _reason) external onlyTenantOrLandlord {
+      // to do:
+      // create arbitration contract
     }
     
 }

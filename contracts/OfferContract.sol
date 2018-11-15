@@ -84,6 +84,7 @@ contract OfferContract {
     uint public activeDuration;
     uint public creationDate;
     uint public finePercent;
+    uint public securityDeposit;
     uint public bookingTime = 30 minutes;
 
     event AgreementCreated(address tenant, address landlord, uint area, uint rentPrice, uint period);
@@ -102,7 +103,7 @@ contract OfferContract {
         _; 
     }
     
-    constructor (uint _rentPrice , uint _area, uint _period, uint _activeDuration, uint _finePercent){
+    constructor (uint _rentPrice , uint _area, uint _period, uint _activeDuration, uint _finePercent, uint _securityDeposit){
         require(activeDuration > 0);
 
         owner = msg.sender;
@@ -111,6 +112,7 @@ contract OfferContract {
         period = _period;
         creationDate = block.timestamp;
         finePercent = _finePercent;
+        securityDeposit = _securityDeposit;
         activeDuration = _activeDuration.mul(1 days);
     }
 
@@ -122,7 +124,7 @@ contract OfferContract {
             require(msg.sender == bookedFor);
         }
         
-        AgreementContract agreement = new AgreementContract(msg.sender, owner, rentPrice, area, period, finePercent);
+        AgreementContract agreement = new AgreementContract(msg.sender, owner, rentPrice, area, period, finePercent, securityDeposit);
         emit AgreementCreated(msg.sender, owner, area, rentPrice, period);
         status = OfferStatus.Accepted;
     }

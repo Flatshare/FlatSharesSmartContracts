@@ -81,6 +81,7 @@ contract AgreementContract {
     uint public period;
     uint public agreementCreated;
     uint public finePercent;
+    uint public securityDeposit;
     uint public month = 30 days;
 
     bool signedByTenant;
@@ -109,25 +110,28 @@ contract AgreementContract {
         _; 
     }
     
-    constructor(address _tenant, address _landlord, uint _area, uint _rentPrice, uint _period, uint _finePercent) {
+    constructor(address _tenant, address _landlord, uint _area, uint _rentPrice, uint _period, uint _finePercent, uint _securityDeposit) {
         tenant = _tenant;
         landlord = _landlord;
         area = _area;
         rentPrice = _rentPrice;
         period = _period.mul(month);
         finePercent = _finePercent;
+        securityDeposit = _securityDeposit;
         agreementCreated = block.timestamp;
         status = AgreementStatus.New;
     }
 
-    function signAgreement() public onlyTenantOrLandlord onlyNew {
+    function signAgreement() public payable onlyTenantOrLandlord onlyNew {
         if(msg.sender == tenant){
             require(signedByTenant == false);
+            require (msg.value >= securityDeposit);
             signedByTenant = true;
             emit AgreementSigned(msg.sender);
             if(signedByLandlord == true){
                 status = AgreementStatus.Signed;
                 PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
+                address(payment).transfer(securityDeposit);
             }
         } else {
             require(signedByLandlord == false);
@@ -136,6 +140,7 @@ contract AgreementContract {
             if(signedByTenant == true){
                 status = AgreementStatus.Signed;
                 PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
+                address(payment).transfer(securityDeposit);
             }
         }
     }

@@ -125,13 +125,13 @@ contract AgreementContract {
     function signAgreement() public payable onlyTenantOrLandlord onlyNew {
         if(msg.sender == tenant){
             require(signedByTenant == false);
-            require (msg.value >= securityDeposit);
+            require (msg.value >= securityDeposit.add(rentPrice));
             signedByTenant = true;
             emit AgreementSigned(msg.sender);
             if(signedByLandlord == true){
                 status = AgreementStatus.Signed;
                 PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
-                address(payment).transfer(securityDeposit);
+                address(payment).transfer(securityDeposit.add(rentPrice));
             }
         } else {
             require(signedByLandlord == false);
@@ -140,7 +140,7 @@ contract AgreementContract {
             if(signedByTenant == true){
                 status = AgreementStatus.Signed;
                 PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
-                address(payment).transfer(securityDeposit);
+                address(payment).transfer(securityDeposit.add(rentPrice));
             }
         }
     }

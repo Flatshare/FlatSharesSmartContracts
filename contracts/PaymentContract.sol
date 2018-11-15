@@ -108,6 +108,7 @@ contract PaymentContract {
     constructor(address _tenant, address _landlord, address _agreement) {
         tenant = _tenant;
         landlord = _landlord;
+        lastPayment = block.timestamp;
         agreement = AgreementContract(_agreement);   
     }
 
@@ -115,12 +116,12 @@ contract PaymentContract {
         require(msg.value == agreement.rentPrice());
         require(block.timestamp >= lastPayment.add(month));
         
-        if((lastPayment > 0 && block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days) > 0 && lastFinePayment > 0) || block.timestamp.sub(lastFinePayment) > block.timestamp.sub(lastPayment.add(month).add(1 weeks))) {
+        if((block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days) > 0 && lastFinePayment > 0) || block.timestamp.sub(lastFinePayment) > block.timestamp.sub(lastPayment.add(month).add(1 weeks))) {
             revert();
         }
 
-        landlord.transfer(msg.value);
         lastPayment = block.timestamp;
+        landlord.transfer(msg.value);
     }
 
     function payFine() public payable onlyTenant {

@@ -115,6 +115,7 @@ contract OfferContract {
     }
 
     function acceptOffer() public onlyInActiveDuration {
+        require (msg.sender != owner);
         require(status == OfferStatus.New || status == OfferStatus.Booked);
 
         if(status == OfferStatus.Booked && bookedAt[bookedFor].add(bookingTime) >= block.timestamp){

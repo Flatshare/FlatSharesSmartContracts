@@ -1,6 +1,8 @@
 pragma solidity ^0.4.24;
 
 import "./PaymentContract.sol";
+import "./DepositContract.sol";
+
 
 /**
  * @title SafeMath
@@ -131,7 +133,9 @@ contract AgreementContract {
             if(signedByLandlord == true){
                 status = AgreementStatus.Signed;
                 PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
-                address(payment).transfer(securityDeposit.add(rentPrice));
+                DepositContract escrow = new DepositContract(tenant, landlord, address(this));
+                address(payment).transfer(rentPrice);
+                address(escrow).transfer(securityDeposit);
             }
         } else {
             require(signedByLandlord == false);
@@ -140,7 +144,9 @@ contract AgreementContract {
             if(signedByTenant == true){
                 status = AgreementStatus.Signed;
                 PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
-                address(payment).transfer(securityDeposit.add(rentPrice));
+                DepositContract escrow = new DepositContract(tenant, landlord, address(this));
+                address(payment).transfer(rentPrice);
+                address(escrow).transfer(securityDeposit);
             }
         }
     }

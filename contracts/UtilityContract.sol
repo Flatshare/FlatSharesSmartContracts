@@ -69,12 +69,15 @@ library SafeMath {
 contract UtilityContract {
 
     AgreementContract agreement;
-
-    uint public lastUtilityPayment;
+    
+    uint public lastRequestUtilityPayment;
+    uint public debt;
     uint public month = 30 days;
 
     address public tenant;
     address public landlord;
+
+    event UtilityDeptRepaid(address _agreement);
 
     modifier onlyTenant() { 
         require(msg.sender == tenant); 
@@ -97,7 +100,7 @@ contract UtilityContract {
     }
 
     modifier onlyAfterPeriodExpired() { 
-        require (agreement.agreementCreated().add(agreement.period()) < block.timestamp); 
+        require(agreement.agreementCreated().add(agreement.period()) < block.timestamp); 
         _; 
     }
 
@@ -107,8 +110,30 @@ contract UtilityContract {
     constructor(address _tenant, address _landlord, address _agreement) {
         tenant = _tenant;
         landlord = _landlord;
-        lastUtilityPayment = block.timestamp;
         agreement = AgreementContract(_agreement);   
+    }
+
+    function requestUtilityPayment(uint _price) external onlyLandlord {
+      require(lastRequestUtilityPayment.add(month) <= block.timestamp);
+      require(price > 0);
+
+      debt = _price;
+      lastRequestUtilityPayment = block.timestamp;
+    }
+
+    function payUtilityPayment() external payable onlyTenant {
+      require(dept > 0);
+      require(msg.value == debt);
+
+      landlord.transfer(msg.value);
+      emit UtilityDeptRepaid(agreement, dept);
+      
+      debt = 0;
+    }
+
+    function startArbitration(string _reason) external onlyLandlord {
+      // to do:
+      // create arbitration contract
     }
 
 }

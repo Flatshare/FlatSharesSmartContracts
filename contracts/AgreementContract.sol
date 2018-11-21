@@ -69,8 +69,10 @@ library SafeMath {
 }
 
 contract AgreementContract {
-    enum AgreementStatus { New, Signed, Declined }
+    enum AgreementStatus { New, Signed, Declined, Terminated }
     AgreementStatus status;
+
+    PaymentContract payment;
 
     string public agreementDetails;
     string public declineReason;
@@ -83,6 +85,7 @@ contract AgreementContract {
     uint public period;
     uint public agreementCreated;
     uint public finePercent;
+    uint public terminatingFee;
     uint public securityDeposit;
     uint public month = 30 days;
 
@@ -112,6 +115,11 @@ contract AgreementContract {
         _; 
     }
     
+    modifier onlySigned() { 
+        require(status == AgreementStatus.Signed); 
+        _; 
+    }
+
     constructor(address _tenant, address _landlord, uint _area, uint _rentPrice, uint _period, uint _finePercent, uint _securityDeposit) {
         tenant = _tenant;
         landlord = _landlord;
@@ -132,7 +140,7 @@ contract AgreementContract {
             emit AgreementSigned(msg.sender);
             if(signedByLandlord == true){
                 status = AgreementStatus.Signed;
-                PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
+                payment = new PaymentContract(tenant, landlord, address(this));
                 DepositContract escrow = new DepositContract(tenant, landlord, address(this));
                 address(payment).transfer(rentPrice);
                 address(escrow).transfer(securityDeposit);
@@ -143,7 +151,7 @@ contract AgreementContract {
             emit AgreementSigned(msg.sender);
             if(signedByTenant == true){
                 status = AgreementStatus.Signed;
-                PaymentContract payment = new PaymentContract(tenant, landlord, address(this));
+                payment = new PaymentContract(tenant, landlord, address(this));
                 DepositContract escrow = new DepositContract(tenant, landlord, address(this));
                 address(payment).transfer(rentPrice);
                 address(escrow).transfer(securityDeposit);
@@ -151,13 +159,21 @@ contract AgreementContract {
         }
     }
 
-    function declineAgreement(string _reason) public onlyTenantOrLandlord onlyNew {
+    function declineAgreement(string _reason) external onlyTenantOrLandlord onlyNew {
         require (status!=AgreementStatus.Declined);
         
         declineReason = _reason;
         status = AgreementStatus.Declined;
         emit AgreementDeclined(msg.sender, _reason);
     }
+
+    // to do: add terminating fee process, from what it should be? Secure deposit or rent payment or just new fee from tenant
+    function terminateAgreement() external onlyTenantOrLandlord onlySigned {
+      require(block.timestamp.sub(payment.lastPayment().add(month days).add(1 weeks)).div(1 days));
+      
+      status = AgreementStatus.Terminated;
+    }
+    
 
     function extendAgreement(uint _newRentPrice, uint _newPeriod) public onlyAfterPeriodExpired onlyLandlord {
         require(_newRentPrice > 0);

@@ -69,10 +69,14 @@ library SafeMath {
 }
 
 contract AgreementContract {
+    
+    using SafeMath for uint256;
+
     enum AgreementStatus { New, Signed, Declined, Terminated }
     AgreementStatus status;
 
     PaymentContract payment;
+    DepositContract escrow;
 
     string public agreementDetails;
     string public declineReason;
@@ -141,7 +145,7 @@ contract AgreementContract {
             if(signedByLandlord == true){
                 status = AgreementStatus.Signed;
                 payment = new PaymentContract(tenant, landlord, address(this));
-                DepositContract escrow = new DepositContract(tenant, landlord, address(this));
+                escrow = new DepositContract(tenant, landlord, address(this));
                 address(payment).transfer(rentPrice);
                 address(escrow).transfer(securityDeposit);
             }
@@ -152,7 +156,7 @@ contract AgreementContract {
             if(signedByTenant == true){
                 status = AgreementStatus.Signed;
                 payment = new PaymentContract(tenant, landlord, address(this));
-                DepositContract escrow = new DepositContract(tenant, landlord, address(this));
+                escrow = new DepositContract(tenant, landlord, address(this));
                 address(payment).transfer(rentPrice);
                 address(escrow).transfer(securityDeposit);
             }
@@ -169,11 +173,10 @@ contract AgreementContract {
 
     // to do: add terminating fee process, from what it should be? Secure deposit or rent payment or just new fee from tenant
     function terminateAgreement() external onlyTenantOrLandlord onlySigned {
-      require(block.timestamp.sub(payment.lastPayment().add(month days).add(1 weeks)).div(1 days));
+      require(block.timestamp.sub(payment.lastPayment().add(month).add(1 weeks)).div(1 days) > 0);
       
       status = AgreementStatus.Terminated;
     }
-    
 
     function extendAgreement(uint _newRentPrice, uint _newPeriod) public onlyAfterPeriodExpired onlyLandlord {
         require(_newRentPrice > 0);

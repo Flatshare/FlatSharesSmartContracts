@@ -172,13 +172,14 @@ contract AgreementContract {
     }
 
     // to do: add terminating fee process, from what it should be? Secure deposit or rent payment or just new fee from tenant
-    function terminateAgreement() external onlyTenantOrLandlord onlySigned {
+    function terminateAgreement() external onlyLandlord onlySigned {
       require(block.timestamp.sub(payment.lastPayment().add(month).add(1 weeks)).div(1 days) > 0);
       
       status = AgreementStatus.Terminated;
     }
 
     function extendAgreement(uint _newRentPrice, uint _newPeriod) public onlyAfterPeriodExpired onlyLandlord {
+        require (status == AgreementStatus.Signed);
         require(_newRentPrice > 0);
         require(_newPeriod > 0);
 

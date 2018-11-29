@@ -26,7 +26,7 @@ const PaymentContract = artifacts.require('PaymentContract');
 contract('PaymentContract', function () {
 
     beforeEach(async function () {
-      this.agreement = await AgreementContract.new(web3.eth.accounts[1], web3.eth.accounts[2], 10, 20, 12, 3, 10);
+      this.agreement = await AgreementContract.new(web3.eth.accounts[1], web3.eth.accounts[2], 10, web3.toWei('1', 'ether'), 12, 3, 10);
       this.contract = await PaymentContract.new(web3.eth.accounts[1], web3.eth.accounts[2], this.agreement.address);
     });
 
@@ -42,9 +42,8 @@ contract('PaymentContract', function () {
       });
 
       it('Should pass after fine payed', async function () {
-        await increaseTimeTo(duration.days(100));
+        await increaseTimeTo(duration.days(50));
         await this.contract.payRentForMonth({from: web3.eth.accounts[1], value: await this.agreement.rentPrice()}).should.be.rejectedWith("revert");
-         console.log("Step2" + await this.contract.getMyFine({from: web3.eth.accounts[1]}));
         await this.contract.payFine({from: web3.eth.accounts[1], value: await this.contract.getMyFine({from: web3.eth.accounts[1]})});
         await this.contract.payRentForMonth({from: web3.eth.accounts[1], value: await this.agreement.rentPrice()});
       });

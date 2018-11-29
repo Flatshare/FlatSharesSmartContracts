@@ -31,7 +31,7 @@ contract PaymentContract {
     }
 
     modifier onlyInAgreementPeriod() { 
-        require(block.timestamp >= agreement.agreementCreated().add(agreement.period())); 
+        require(block.timestamp >= agreement.agreementCreated() && block.timestamp <= agreement.agreementCreated().add(agreement.period())); 
         _; 
     }
 
@@ -54,7 +54,7 @@ contract PaymentContract {
         require(msg.value == agreement.rentPrice());
         require(block.timestamp >= lastPayment.add(month));
         
-        if((block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days) > 0 && lastFinePayment > 0) || block.timestamp.sub(lastFinePayment) > block.timestamp.sub(lastPayment.add(month).add(1 weeks))) {
+        if((block.timestamp > lastPayment.add(month).add(1 weeks)) && (( block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days) > 0 && lastFinePayment == 0) || block.timestamp.sub(lastFinePayment) > block.timestamp.sub(lastPayment.add(month).add(1 weeks)))) {
             revert();
         }
 
@@ -63,6 +63,7 @@ contract PaymentContract {
     }
 
     function payFine() public payable onlyTenant {
+        require(lastFinePayment == 0 || block.timestamp.sub(lastFinePayment) < lastPayment.add(month).add(1 weeks));
         require(msg.value == calculateFine(block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days)));
         require(msg.value > 0);
         
@@ -75,6 +76,10 @@ contract PaymentContract {
     }
 
     function getMyFine() external view onlyTenant returns(uint) {
+        if(block.timestamp <= lastPayment.add(month).add(1 weeks)){
+            return 0;
+        }
+
         return calculateFine(block.timestamp.sub(lastPayment.add(month).add(1 weeks)).div(1 days));
     }
     

@@ -42,7 +42,7 @@ contract OfferContract {
     }
     
     constructor (uint _rentPrice , uint _area, uint _period, uint _activeDuration, uint _finePercent, uint _securityDeposit){
-        require(activeDuration > 0);
+        require(_activeDuration > 0);
 
         owner = msg.sender;
         rentPrice = _rentPrice;
@@ -55,7 +55,7 @@ contract OfferContract {
     }
 
     function acceptOffer() public onlyInActiveDuration {
-        require (msg.sender != owner);
+        require(msg.sender != owner);
         require(status == OfferStatus.New || status == OfferStatus.Booked);
 
         if(status == OfferStatus.Booked && bookedAt[bookedFor].add(bookingTime) >= block.timestamp){

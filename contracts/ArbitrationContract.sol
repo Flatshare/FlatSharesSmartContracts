@@ -30,6 +30,9 @@ contract ArbitrationContract {
     
     mapping(address => bool) isArbitrator;
     mapping(address => bool) votes;
+    mapping(address => bool) voted;
+    
+    event VotesResult(bool result);
     
     modifier onlyOwner() { 
     	require(msg.sender == owner); 
@@ -55,6 +58,12 @@ contract ArbitrationContract {
     	require(now >= _time); 
     	_; 
     }
+
+    modifier onlyNotVoted() { 
+      require(voted[msg.sender] == false); 
+      _; 
+    }
+    
     
     // to DO: Who is owner??
     constructor(address _tenant, address _landlord, address _initiator, address _agreement) {
@@ -74,9 +83,9 @@ contract ArbitrationContract {
     	for (uint i = 0; i < _arbitrators.length; i++) {
     		arbitrators.push(_arbitrators[i]);
     		isArbitrator[_arbitrators[i]] = true;
-		}
+		  }
 
-		arbitratorsAdded = block.timestamp;
+		  arbitratorsAdded = block.timestamp;
     }
     
     function becomeArbitrator() external payable onlyNotNegativeRate onlyArbitrator {
@@ -86,10 +95,11 @@ contract ArbitrationContract {
        stakedAmount[msg.sender] = msg.value;
     }
 
-    function vote(bool _vote, string _decisionDetails) external onlyArbitrator {
+    function vote(bool _vote, string _decisionDetails) external onlyNotVoted onlyArbitrator {
       require(arbitratorsAdded.add(2 days) >= block.timestamp);
-      require(votesAmount < 5);
+      require(stakedAmount[msg.sender] > 0);
       
+      voted[msg.sender] = true;
       votesAmount = votesAmount.add(1);
       votes[msg.sender] = _vote;
       decisions[msg.sender] = _decisionDetails;
@@ -99,7 +109,7 @@ contract ArbitrationContract {
       }
     }
 
-    function getVotesResult() external view returns(bool) {
+    function getVotesResult() external returns(bool) {
       require(votesAmount == arbitratorsNum);
 
       for(uint i = 0; i < arbitrators.length; i++) {
@@ -109,6 +119,8 @@ contract ArbitrationContract {
           no = no.add(1);
         }
       }
+
+      emit VotesResult(yes > no);
 
       return yes > no;
     }
